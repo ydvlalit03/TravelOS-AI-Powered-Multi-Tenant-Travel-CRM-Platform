@@ -15,10 +15,10 @@ from fpdf import FPDF
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.agents.llm.factory import get_chat_model, get_image_provider
-from app.agents.llm.mock import build_mock_captions
+from app.agents.llm.mock import build_mock_captions, build_mock_reel
 from app.integrations.storage import get_storage
 
-KINDS = ("poster", "caption", "brochure")
+KINDS = ("poster", "caption", "brochure", "reel")
 
 
 def _poster_prompt(ctx: dict[str, Any]) -> str:
@@ -29,6 +29,33 @@ def _poster_prompt(ctx: dict[str, Any]) -> str:
         "Bold typography space at top, dramatic landscape, warm sunset palette, "
         "high detail, marketing-ready."
     )
+
+
+def _reel_messages(ctx: dict[str, Any]) -> list[Any]:
+    system = (
+        "You are a short-form video producer for a travel agency. Draft a punchy "
+        "Instagram Reel storyboard. Respond with ONLY minified JSON "
+        '{"title":str,"hook":str,"music_vibe":str,'
+        '"scenes":[{"order":int,"text":str,"visual":str,"seconds":int}],"cta":str}.'
+    )
+    params = {"title": ctx.get("title"), "destination": ctx.get("destination"),
+              "audience": ctx.get("audience")}
+    return [
+        SystemMessage(content=system),
+        HumanMessage(content=f"TASK: reel\nPARAMS_JSON: {json.dumps(params)}"),
+    ]
+
+
+def _parse_reel(raw: str, ctx: dict[str, Any]) -> dict[str, Any]:
+    m = re.search(r"\{.*\}", raw.strip(), re.DOTALL)
+    if m:
+        try:
+            data = json.loads(m.group(0))
+            if isinstance(data, dict) and data.get("scenes"):
+                return data
+        except json.JSONDecodeError:
+            pass
+    return build_mock_reel(ctx)
 
 
 def _caption_messages(ctx: dict[str, Any]) -> list[Any]:
@@ -151,6 +178,26 @@ async def stream_creatives(
         url = storage.save(tenant_id, pdf_bytes, "pdf")
         asset = {"kind": "brochure", "url": url, "text_content": None,
                  "meta": {"content_type": "application/pdf"}}
+        assets.append(asset)
+        yield {"type": "asset", "asset": asset}
+
+    if "reel" in kinds:
+        yield {"type": "progress", "kind": "reel", "message": "Storyboarding a reel…"}
+        # A vertical cover frame + a scene-by-scene storyboard (client-rendered).
+        prompt = f"Vertical 9:16 travel reel cover for {ctx.get('destination')}, cinematic, bold text space"
+        try:
+            img = await get_image_provider().generate(prompt, width=1024, height=1820)
+        except Exception:
+            from app.agents.llm.images import MockImageProvider
+
+            img = await MockImageProvider().generate(prompt, width=1024, height=1820)
+        cover_url = storage.save(tenant_id, img.data, img.ext)
+        model = get_chat_model(temperature=0.8)
+        result = await model.ainvoke(_reel_messages(ctx))
+        content = result.content if isinstance(result.content, str) else str(result.content)
+        storyboard = _parse_reel(content, ctx)
+        asset = {"kind": "reel", "url": cover_url, "text_content": json.dumps(storyboard),
+                 "meta": storyboard}
         assets.append(asset)
         yield {"type": "asset", "asset": asset}
 

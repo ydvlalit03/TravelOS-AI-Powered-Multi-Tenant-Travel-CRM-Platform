@@ -24,13 +24,18 @@ _travelos_log.propagate = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.require_production_secrets()
     from app.workers.scheduler import start_scheduler, stop_scheduler
 
-    start_scheduler()
+    # In multi-worker prod the scheduler runs as a dedicated worker process; the
+    # web service sets RUN_SCHEDULER=false to avoid duplicating jobs.
+    if settings.run_scheduler:
+        start_scheduler()
     try:
         yield
     finally:
-        stop_scheduler()
+        if settings.run_scheduler:
+            stop_scheduler()
 
 
 app = FastAPI(
@@ -50,8 +55,8 @@ app.add_middleware(
 
 app.include_router(api_router)
 
-# Serve generated creatives (posters, brochures) in dev. S3+CDN in Phase 5.
-_storage_dir = Path("/app/storage")
+# Serve generated creatives (posters, brochures) in dev. S3+CDN in prod.
+_storage_dir = Path(settings.storage_dir)
 _storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/storage", StaticFiles(directory=str(_storage_dir)), name="storage")
 

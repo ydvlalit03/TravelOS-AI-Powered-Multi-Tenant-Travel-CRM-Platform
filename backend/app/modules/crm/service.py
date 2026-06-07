@@ -105,10 +105,12 @@ async def ingest_lead(
     trip_id: uuid.UUID | None = None,
     notes: str | None = None,
     source_meta: dict | None = None,
+    trigger_first_touch: bool = True,
 ) -> uuid.UUID:
-    """Create a lead and its first-touch outreach. Self-contained (own sessions)."""
+    """Create a lead and (optionally) its first-touch outreach. Own sessions."""
     lead_id = uuid.uuid4()
-    channel = "email" if email else "sms"
+    # WhatsApp is the default for phone-only leads (India travel norm).
+    channel = "email" if email else "whatsapp"
 
     # 1) Write the lead, resolve interest (short tx).
     async with tenant_session(tenant_id) as s:
@@ -121,6 +123,9 @@ async def ingest_lead(
         )
         s.add(LeadActivity(tenant_id=tenant_id, lead_id=lead_id, type="created",
                            content=f"Lead captured from {source}."))
+
+    if not trigger_first_touch:
+        return lead_id
 
     # 2) Draft the outreach (agent — outside any transaction).
     draft = await draft_first_touch(name=name, interest=interest, agency=agency, channel=channel)
@@ -211,3 +216,21 @@ async def send_drafted_message(s: AsyncSession, tenant: Tenant, message: Message
     lead = await s.get(Lead, message.lead_id)
     if lead is not None:
         await deliver(s, tenant, lead, message)
+
+
+async def ingest_whatsapp_inbound(
+    tenant_id: uuid.UUID, from_phone: str, name: str | None, body: str
+) -> dict:
+    """Route an inbound WhatsApp message to a lead (creating one if new)."""
+    async with tenant_session(tenant_id) as s:
+        existing = (await s.execute(
+            select(Lead.id).where(Lead.phone == from_phone).limit(1)
+        )).scalar_one_or_none()
+        lead_id = existing
+
+    if lead_id is None:
+        lead_id = await ingest_lead(
+            tenant_id, name=name or from_phone, phone=from_phone, source="whatsapp",
+            trigger_first_touch=False,
+        )
+    return await ingest_inbound(tenant_id, lead_id, body, channel="whatsapp")

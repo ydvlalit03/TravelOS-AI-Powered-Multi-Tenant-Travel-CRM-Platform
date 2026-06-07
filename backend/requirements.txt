@@ -1,6 +1,7 @@
 # --- Web framework ---
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
+gunicorn==23.0.0
 python-multipart==0.0.20
 email-validator==2.2.0
 
@@ -30,3 +31,4 @@ httpx==0.28.1
 redis==5.2.1
 apscheduler==3.11.0
 fpdf2==2.8.2          # pure-python PDF (brochures), no system libs
+boto3==1.35.90        # S3 storage (prod)

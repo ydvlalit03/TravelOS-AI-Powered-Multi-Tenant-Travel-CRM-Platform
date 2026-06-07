@@ -19,7 +19,7 @@ from app.schemas.trip import CreativeOut, CreativeRequest
 
 router = APIRouter(tags=["creative"])
 
-_VALID_KINDS = {"poster", "caption", "brochure"}
+_VALID_KINDS = {"poster", "caption", "brochure", "reel"}
 
 
 def _trip_context(trip: Trip) -> dict:

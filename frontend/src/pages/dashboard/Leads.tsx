@@ -201,7 +201,7 @@ function LeadDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
     if (!reply.trim() || !lead) return;
     setBusy(true);
     try {
-      await replyToLead(id, reply, lead.email ? "email" : "sms");
+      await replyToLead(id, reply, lead.email ? "email" : "whatsapp");
       setReply("");
       await load();
       onChanged();
@@ -214,7 +214,7 @@ function LeadDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
     if (!inbound.trim()) return;
     setBusy(true);
     try {
-      await simulateInbound(id, inbound, lead?.email ? "email" : "sms");
+      await simulateInbound(id, inbound, lead?.email ? "email" : "whatsapp");
       setInbound("");
       await load();
       onChanged();

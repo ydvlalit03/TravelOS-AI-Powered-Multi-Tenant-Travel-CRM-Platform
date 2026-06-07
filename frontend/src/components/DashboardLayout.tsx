@@ -7,6 +7,7 @@ import {
   Hotel,
   Megaphone,
   Users,
+  BarChart3,
   Settings,
   Globe,
   LogOut,
@@ -19,6 +20,7 @@ const links = [
   { to: "/app/sourcing", label: "Sourcing", icon: Hotel, end: false },
   { to: "/app/publishing", label: "Publishing", icon: Megaphone, end: false },
   { to: "/app/leads", label: "Leads", icon: Users, end: false },
+  { to: "/app/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/app/approvals", label: "Approvals", icon: CheckCircle2, end: false },
 ];
 

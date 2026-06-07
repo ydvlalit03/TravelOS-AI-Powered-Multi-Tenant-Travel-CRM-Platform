@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,7 +9,9 @@ import {
   ImageIcon,
   FileText,
   MessageSquare,
+  Film,
 } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { streamSSE } from "@/lib/sse";
 import {
@@ -52,7 +54,7 @@ export function TripDetail() {
     try {
       await streamSSE(
         `/api/v1/trips/${id}/creatives/generate`,
-        { kinds: ["poster", "caption", "brochure"] },
+        { kinds: ["poster", "caption", "brochure", "reel"] },
         (ev) => {
           if (ev.type === "progress") setGenSteps((s) => [...s, String(ev.message)]);
           if (ev.type === "done") {
@@ -188,6 +190,7 @@ function CreativeCard({ c }: { c: Creative }) {
         {c.kind === "poster" && <ImageIcon className="h-4 w-4 text-[var(--color-ocean-500)]" />}
         {c.kind === "caption" && <MessageSquare className="h-4 w-4 text-[var(--color-teal-400)]" />}
         {c.kind === "brochure" && <FileText className="h-4 w-4 text-[var(--color-sunset-500)]" />}
+        {c.kind === "reel" && <Film className="h-4 w-4 text-pink-500" />}
         <span className="text-sm font-medium capitalize">{c.kind}</span>
         <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{c.status.replace("_", " ")}</span>
       </div>
@@ -203,7 +206,55 @@ function CreativeCard({ c }: { c: Creative }) {
             <FileText className="h-4 w-4" /> Open brochure PDF
           </a>
         )}
+        {c.kind === "reel" && <ReelPreview c={c} />}
       </div>
     </motion.div>
+  );
+}
+
+interface Scene {
+  order: number;
+  text: string;
+  visual?: string;
+  seconds?: number;
+}
+
+function ReelPreview({ c }: { c: Creative }) {
+  const scenes = (c.meta?.scenes as Scene[] | undefined) ?? [];
+  const [i, setI] = useState(0);
+  const timer = useRef<number>(0);
+
+  useEffect(() => {
+    if (scenes.length === 0) return;
+    timer.current = window.setInterval(
+      () => setI((p) => (p + 1) % scenes.length),
+      2200,
+    );
+    return () => window.clearInterval(timer.current);
+  }, [scenes.length]);
+
+  const scene = scenes[i];
+  return (
+    <div className="relative mx-auto aspect-[9/16] w-44 overflow-hidden rounded-xl bg-black">
+      {c.url && <img src={assetUrl(c.url)} alt="reel" className="absolute inset-0 h-full w-full object-cover opacity-70" />}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/70" />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4 }}
+          className="absolute inset-x-0 bottom-0 p-3 text-center text-sm font-semibold text-white drop-shadow"
+        >
+          {scene?.text}
+        </motion.div>
+      </AnimatePresence>
+      <div className="absolute left-2 right-2 top-2 flex gap-1">
+        {scenes.map((_, idx) => (
+          <div key={idx} className={`h-0.5 flex-1 rounded-full ${idx <= i ? "bg-white" : "bg-white/30"}`} />
+        ))}
+      </div>
+    </div>
   );
 }

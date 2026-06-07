@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TenantScoped, TimestampMixin, UUIDPrimaryKey
 
-CREATIVE_KINDS = ("poster", "caption", "brochure")
+CREATIVE_KINDS = ("poster", "caption", "brochure", "reel")
 CREATIVE_STATUSES = ("pending_review", "approved", "rejected")
 
 

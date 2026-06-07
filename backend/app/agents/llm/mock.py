@@ -157,6 +157,24 @@ def build_mock_outreach(params: dict[str, Any]) -> dict[str, Any]:
     return {"subject": subject, "body": body}
 
 
+def build_mock_reel(params: dict[str, Any]) -> dict[str, Any]:
+    destination = params.get("destination", "the destination")
+    title = params.get("title") or f"{destination} Reel"
+    audience = params.get("audience") or "travellers"
+    return {
+        "title": title,
+        "hook": f"POV: you finally booked {destination} 🌄",
+        "music_vibe": "uplifting indie travel beat",
+        "scenes": [
+            {"order": 1, "text": f"Sunrise over {destination} 🌅", "visual": "wide landscape pan", "seconds": 3},
+            {"order": 2, "text": "Adventures all day ⛰️", "visual": "fast activity cuts", "seconds": 3},
+            {"order": 3, "text": f"Made for {audience} ✨", "visual": "smiling group", "seconds": 3},
+            {"order": 4, "text": "Limited slots — DM to book 📩", "visual": "logo + price card", "seconds": 3},
+        ],
+        "cta": "DM 'TRIP' to grab your spot!",
+    }
+
+
 def _has_task(messages: list[BaseMessage], task: str) -> bool:
     for msg in messages:
         text = msg.content if isinstance(msg.content, str) else str(msg.content)
@@ -186,6 +204,8 @@ class MockChatModel(BaseChatModel):
             return json.dumps(build_mock_classification(params), ensure_ascii=False)
         if _has_task(messages, "outreach"):
             return json.dumps(build_mock_outreach(params), ensure_ascii=False)
+        if _has_task(messages, "reel"):
+            return json.dumps(build_mock_reel(params), ensure_ascii=False)
         return json.dumps(build_mock_itinerary(params), ensure_ascii=False)
 
     def _generate(
