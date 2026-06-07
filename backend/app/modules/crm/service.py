@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.followup import classify_inbound, draft_first_touch
@@ -221,10 +221,17 @@ async def send_drafted_message(s: AsyncSession, tenant: Tenant, message: Message
 async def ingest_whatsapp_inbound(
     tenant_id: uuid.UUID, from_phone: str, name: str | None, body: str
 ) -> dict:
-    """Route an inbound WhatsApp message to a lead (creating one if new)."""
+    """Route an inbound WhatsApp message to a lead (creating one if new).
+
+    Matches on digits only, so a lead saved as "+91 81680…" still matches the
+    bare "9181680…" that WhatsApp delivers (avoids duplicate leads).
+    """
+    digits = "".join(c for c in from_phone if c.isdigit())
     async with tenant_session(tenant_id) as s:
         existing = (await s.execute(
-            select(Lead.id).where(Lead.phone == from_phone).limit(1)
+            select(Lead.id)
+            .where(func.regexp_replace(Lead.phone, "[^0-9]", "", "g") == digits)
+            .limit(1)
         )).scalar_one_or_none()
         lead_id = existing
 

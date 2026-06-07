@@ -63,6 +63,12 @@ Every draft lands in a single **Approval Center** — the human-in-the-loop hear
   </tr>
 </table>
 
+<div align="center">
+  <img src="docs/screenshots/06-whatsapp-inbox.png" alt="Live WhatsApp 2-way inbox" width="80%"/>
+  <br/>
+  <sub><b>Live WhatsApp 2-way</b> 🟢 — real Meta Cloud API: a lead's reply lands in the CRM inbox, intent auto-classified, agent replies back from the same thread.</sub>
+</div>
+
 ---
 
 ## 🛠️ Built with
