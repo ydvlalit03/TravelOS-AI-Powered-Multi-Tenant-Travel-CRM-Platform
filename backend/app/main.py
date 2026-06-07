@@ -24,13 +24,18 @@ _travelos_log.propagate = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.require_production_secrets()
     from app.workers.scheduler import start_scheduler, stop_scheduler
 
-    start_scheduler()
+    # In multi-worker prod the scheduler runs as a dedicated worker process; the
+    # web service sets RUN_SCHEDULER=false to avoid duplicating jobs.
+    if settings.run_scheduler:
+        start_scheduler()
     try:
         yield
     finally:
-        stop_scheduler()
+        if settings.run_scheduler:
+            stop_scheduler()
 
 
 app = FastAPI(

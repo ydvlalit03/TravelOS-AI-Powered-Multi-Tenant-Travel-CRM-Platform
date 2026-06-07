@@ -2,7 +2,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +23,12 @@ class Settings(BaseSettings):
 
     # --- Redis ---
     redis_url: str = "redis://localhost:6379/0"
+
+    # --- Background scheduler ---
+    # Run in-process (single-process dev). In multi-worker prod, set false on the
+    # web service and run the dedicated worker (python -m app.workers.run) instead,
+    # so the scheduler isn't duplicated across web workers.
+    run_scheduler: bool = True
 
     # --- Auth ---
     access_token_expire_minutes: int = 30
@@ -69,14 +75,40 @@ class Settings(BaseSettings):
     storage_backend: Literal["local", "s3"] = "local"
     s3_bucket: str = ""
     aws_region: str = "ap-south-1"
+    # Public base URL for stored assets (e.g. a CloudFront domain). Falls back to
+    # the S3 virtual-hosted URL. Required for real IG publishing (Graph API fetches
+    # the image by public URL).
+    asset_public_base_url: str = ""
 
     # --- CORS ---
+    # Accepts a JSON list or a comma-separated string in CORS_ORIGINS.
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
             "http://localhost:3000",
         ]
     )
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_csv(cls, v: object) -> object:
+        if isinstance(v, str) and not v.strip().startswith("["):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
+
+    def require_production_secrets(self) -> None:
+        """Fail fast if production is misconfigured."""
+        if self.environment != "production":
+            return
+        problems = []
+        if self.secret_key in ("", "change-me"):
+            problems.append("SECRET_KEY must be set")
+        if not self.credentials_encryption_key:
+            problems.append("CREDENTIALS_ENCRYPTION_KEY must be set")
+        if self.storage_backend == "s3" and not self.s3_bucket:
+            problems.append("S3_BUCKET required when STORAGE_BACKEND=s3")
+        if problems:
+            raise RuntimeError("Invalid production config: " + "; ".join(problems))
 
 
 @lru_cache

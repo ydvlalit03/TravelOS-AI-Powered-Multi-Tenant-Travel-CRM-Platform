@@ -29,9 +29,42 @@ class LocalStorage(StorageBackend):
         return f"{STORAGE_URL_PREFIX}/{tenant_id}/{name}"
 
 
-class S3Storage(StorageBackend):  # pragma: no cover - wired in Phase 5
+_CONTENT_TYPES = {
+    "svg": "image/svg+xml",
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "pdf": "application/pdf",
+    "mp4": "video/mp4",
+}
+
+
+class S3Storage(StorageBackend):
+    """Uploads to S3 and returns a public URL (CloudFront domain if configured).
+
+    A public URL is required for real Instagram publishing — the Graph API
+    fetches the image by URL.
+    """
+
+    def __init__(self) -> None:
+        import boto3  # imported lazily so dev doesn't need boto3
+
+        self._client = boto3.client("s3", region_name=settings.aws_region)
+        self._bucket = settings.s3_bucket
+
     def save(self, tenant_id: str, data: bytes, ext: str) -> str:
-        raise NotImplementedError("S3 storage is implemented in Phase 5")
+        key = f"{tenant_id}/{uuid.uuid4().hex}.{ext}"
+        self._client.put_object(
+            Bucket=self._bucket,
+            Key=key,
+            Body=data,
+            ContentType=_CONTENT_TYPES.get(ext, "application/octet-stream"),
+            CacheControl="public, max-age=31536000",
+        )
+        base = settings.asset_public_base_url.rstrip("/")
+        if base:
+            return f"{base}/{key}"
+        return f"https://{self._bucket}.s3.{settings.aws_region}.amazonaws.com/{key}"
 
 
 def get_storage() -> StorageBackend:

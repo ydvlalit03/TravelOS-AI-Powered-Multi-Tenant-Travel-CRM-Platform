@@ -41,11 +41,14 @@ uvicorn app.main:app --reload
 ```
 
 ## Roadmap (phases)
-- **Phase 0** — Foundation: multi-tenant auth, animated onboarding, dashboard shell ← *current*
-- **Phase 1** — Trip + Creative agents
-- **Phase 2** — CRM + Leads (Meta webhook, Email/SMS followups)
-- **Phase 3** — Sourcing + Instagram publishing
-- **Phase 4** — WhatsApp Cloud API, video, analytics
-- **Phase 5** — AWS production
+- **Phase 0** ✅ Foundation: multi-tenant auth, animated onboarding, dashboard shell
+- **Phase 1** ✅ Trip + Creative agents (itinerary, posters, captions, brochure)
+- **Phase 2** ✅ CRM + Leads (Meta webhook, web capture, Email/SMS followups, Kanban)
+- **Phase 3** ✅ Sourcing + Instagram publishing
+- **Phase 4** ✅ WhatsApp Cloud API, reels, analytics
+- **Phase 5** ✅ Production: Gunicorn + worker, S3, Docker, Terraform, CI/CD
 
-Full design doc: `docs/PLAN.md`.
+Runs fully **keyless** in dev (built-in mock LLM/image providers). Add a
+`GEMINI_API_KEY` and integration keys to go live — see `docs/DEPLOY.md`.
+
+Full design doc: `docs/PLAN.md` · Deploy guide: `docs/DEPLOY.md`.
