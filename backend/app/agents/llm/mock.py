@@ -106,6 +106,57 @@ def build_mock_captions(params: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def build_mock_first_touch(params: dict[str, Any]) -> dict[str, Any]:
+    name = params.get("name") or "there"
+    interest = params.get("interest") or params.get("destination") or "your next trip"
+    agency = params.get("agency") or "our travel agency"
+    channel = params.get("channel", "email")
+    body = (
+        f"Hi {name}! 👋 Thanks for your interest in {interest}. "
+        f"This is {agency}. We'd love to craft the perfect trip for you — "
+        "do you have preferred dates and a group size in mind? "
+        "Reply here and we'll share a tailored itinerary & pricing."
+    )
+    subject = f"Let's plan {interest}!" if channel == "email" else None
+    return {"subject": subject, "body": body}
+
+
+def build_mock_classification(params: dict[str, Any]) -> dict[str, Any]:
+    text = str(params.get("message", "")).lower()
+    if any(w in text for w in ("price", "cost", "budget", "how much", "rate")):
+        intent, suggestion = "price", "Share the itinerary with per-person pricing."
+    elif any(w in text for w in ("date", "when", "available", "month", "weekend")):
+        intent, suggestion = "dates", "Confirm available departure dates and hold a slot."
+    elif any(w in text for w in ("not", "later", "busy", "maybe", "next time")):
+        intent, suggestion = "not_now", "Schedule a gentle follow-up in a few days."
+    elif any(w in text for w in ("yes", "interested", "book", "confirm", "sounds good", "great")):
+        intent, suggestion = "interested", "Move to proposal and send the booking link."
+    else:
+        intent, suggestion = "other", "Reply to clarify their needs."
+    return {"intent": intent, "suggestion": suggestion}
+
+
+def build_mock_outreach(params: dict[str, Any]) -> dict[str, Any]:
+    vendor = params.get("vendor_name") or "team"
+    vtype = params.get("vendor_type", "hotel")
+    destination = params.get("destination", "the destination")
+    trip = params.get("trip_title") or f"{destination} trip"
+    days = params.get("days", "")
+    agency = params.get("agency", "our travel agency")
+    pax = params.get("audience") or "a group"
+    need = "rooms" if vtype == "hotel" else "vehicles/transfers"
+    subject = f"Partnership enquiry — {trip}"
+    body = (
+        f"Hi {vendor},\n\n"
+        f"This is {agency}. We're organising '{trip}' ({days} days in {destination}) "
+        f"for {pax} and would love to work with you for {need}.\n\n"
+        "Could you share your best group rates, availability, and any package deals? "
+        "We run trips here regularly and are looking for a reliable long-term partner.\n\n"
+        "Looking forward to your quote.\n\nWarm regards"
+    )
+    return {"subject": subject, "body": body}
+
+
 def _has_task(messages: list[BaseMessage], task: str) -> bool:
     for msg in messages:
         text = msg.content if isinstance(msg.content, str) else str(msg.content)
@@ -129,6 +180,12 @@ class MockChatModel(BaseChatModel):
         params = _extract_params(messages)
         if _has_task(messages, "captions"):
             return json.dumps(build_mock_captions(params), ensure_ascii=False)
+        if _has_task(messages, "first_touch"):
+            return json.dumps(build_mock_first_touch(params), ensure_ascii=False)
+        if _has_task(messages, "classify"):
+            return json.dumps(build_mock_classification(params), ensure_ascii=False)
+        if _has_task(messages, "outreach"):
+            return json.dumps(build_mock_outreach(params), ensure_ascii=False)
         return json.dumps(build_mock_itinerary(params), ensure_ascii=False)
 
     def _generate(

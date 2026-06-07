@@ -16,15 +16,13 @@ import { useAuth } from "@/lib/auth";
 const links = [
   { to: "/app", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/app/trips", label: "Trips", icon: Map, end: false },
+  { to: "/app/sourcing", label: "Sourcing", icon: Hotel, end: false },
+  { to: "/app/publishing", label: "Publishing", icon: Megaphone, end: false },
+  { to: "/app/leads", label: "Leads", icon: Users, end: false },
   { to: "/app/approvals", label: "Approvals", icon: CheckCircle2, end: false },
 ];
 
-const soon = [
-  { label: "Sourcing", icon: Hotel },
-  { label: "Publishing", icon: Megaphone },
-  { label: "Leads", icon: Users },
-  { label: "Settings", icon: Settings },
-];
+const soon = [{ label: "Settings", icon: Settings }];
 
 export function DashboardLayout() {
   const { user, tenant, logout } = useAuth();

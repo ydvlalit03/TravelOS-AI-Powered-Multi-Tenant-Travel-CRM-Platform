@@ -21,6 +21,7 @@ export interface Tenant {
   name: string;
   slug: string;
   onboarding_completed: boolean;
+  auto_followup: boolean;
   created_at: string;
 }
 

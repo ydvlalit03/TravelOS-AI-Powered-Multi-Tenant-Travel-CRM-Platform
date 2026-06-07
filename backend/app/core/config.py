@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     msg91_api_key: str = ""
     fast2sms_api_key: str = ""
 
+    # --- CRM / followups ---
+    followup_delay_minutes: int = 1440  # gap between sequence steps (default 1 day)
+    followup_max_steps: int = 2  # reminders after the first touch
+    scheduler_interval_seconds: int = 60  # how often the worker scans due followups
+
     # --- Meta (Phase 2/3) ---
     meta_app_id: str = ""
     meta_app_secret: str = ""

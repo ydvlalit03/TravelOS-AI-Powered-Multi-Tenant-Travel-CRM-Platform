@@ -1,6 +1,8 @@
 """TravelOS FastAPI application entrypoint."""
 from contextlib import asynccontextmanager
 
+import logging
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -10,11 +12,25 @@ from fastapi.staticfiles import StaticFiles
 from app.api.v1 import api_router
 from app.core.config import settings
 
+# Surface our own loggers (message sends, scheduler) on stdout — uvicorn's
+# config otherwise hides non-uvicorn loggers.
+_handler = logging.StreamHandler(sys.stdout)
+_handler.setFormatter(logging.Formatter("%(levelname)s [%(name)s] %(message)s"))
+_travelos_log = logging.getLogger("travelos")
+_travelos_log.setLevel(logging.INFO)
+_travelos_log.addHandler(_handler)
+_travelos_log.propagate = False
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup / shutdown hooks (scheduler, warm caches) go here in later phases.
-    yield
+    from app.workers.scheduler import start_scheduler, stop_scheduler
+
+    start_scheduler()
+    try:
+        yield
+    finally:
+        stop_scheduler()
 
 
 app = FastAPI(
