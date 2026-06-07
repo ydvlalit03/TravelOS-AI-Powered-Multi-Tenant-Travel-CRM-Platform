@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.core.config import settings
 
-STORAGE_DIR = Path("/app/storage")
+STORAGE_DIR = Path(settings.storage_dir)
 STORAGE_URL_PREFIX = "/storage"
 
 

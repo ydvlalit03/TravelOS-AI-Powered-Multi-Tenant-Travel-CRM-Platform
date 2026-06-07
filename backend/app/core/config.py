@@ -73,6 +73,9 @@ class Settings(BaseSettings):
 
     # --- Storage ---
     storage_backend: Literal["local", "s3"] = "local"
+    # Local filesystem dir for generated assets (default matches the container
+    # path; override e.g. to /tmp in CI / non-Docker runs).
+    storage_dir: str = "/app/storage"
     s3_bucket: str = ""
     aws_region: str = "ap-south-1"
     # Public base URL for stored assets (e.g. a CloudFront domain). Falls back to

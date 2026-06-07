@@ -55,8 +55,8 @@ app.add_middleware(
 
 app.include_router(api_router)
 
-# Serve generated creatives (posters, brochures) in dev. S3+CDN in Phase 5.
-_storage_dir = Path("/app/storage")
+# Serve generated creatives (posters, brochures) in dev. S3+CDN in prod.
+_storage_dir = Path(settings.storage_dir)
 _storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/storage", StaticFiles(directory=str(_storage_dir)), name="storage")
 
