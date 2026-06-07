@@ -95,3 +95,47 @@ async def receive_meta_webhook(request: Request, tenant: str = Query("")) -> dic
             )
             created += 1
     return {"ok": True, "leads_created": created}
+
+
+# --- WhatsApp Cloud API webhook (2-way) ---
+@router.get("/webhooks/whatsapp")
+async def verify_whatsapp_webhook(
+    mode: str = Query("", alias="hub.mode"),
+    token: str = Query("", alias="hub.verify_token"),
+    challenge: str = Query("", alias="hub.challenge"),
+) -> Response:
+    if mode == "subscribe" and token == settings.whatsapp_verify_token:
+        return Response(content=challenge, media_type="text/plain")
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@router.post("/webhooks/whatsapp")
+async def receive_whatsapp_webhook(request: Request, tenant: str = Query("")) -> dict:
+    """Receive inbound WhatsApp messages and route them to a lead.
+
+    Production maps value.metadata.phone_number_id -> a connected WA account
+    (and tenant); dev routes via ?tenant=<slug>.
+    """
+    body = await request.json()
+    if not tenant:
+        raise HTTPException(status_code=400, detail="tenant slug required (dev)")
+    tenant_obj = await _tenant_by_slug(tenant)
+
+    received = 0
+    for entry in body.get("entry", []):
+        for change in entry.get("changes", []):
+            value = change.get("value", {})
+            contacts = {c.get("wa_id"): (c.get("profile") or {}).get("name")
+                        for c in value.get("contacts", [])}
+            for msg in value.get("messages", []):
+                if msg.get("type") != "text":
+                    continue
+                frm = msg.get("from", "")
+                text = (msg.get("text") or {}).get("body", "")
+                if not (frm and text):
+                    continue
+                await service.ingest_whatsapp_inbound(
+                    tenant_obj.id, frm, contacts.get(frm), text
+                )
+                received += 1
+    return {"ok": True, "messages_received": received}

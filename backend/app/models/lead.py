@@ -23,7 +23,7 @@ LEAD_STAGES = (
     "lost",
 )
 LEAD_SOURCES = ("meta", "web", "whatsapp", "instagram", "manual")
-MESSAGE_CHANNELS = ("email", "sms")
+MESSAGE_CHANNELS = ("email", "sms", "whatsapp")
 MESSAGE_DIRECTIONS = ("outbound", "inbound")
 MESSAGE_STATUSES = ("draft", "queued", "sent", "delivered", "failed", "received")
 

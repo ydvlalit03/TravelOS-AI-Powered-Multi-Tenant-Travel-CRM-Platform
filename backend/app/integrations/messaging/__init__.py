@@ -87,7 +87,31 @@ async def _fast2sms(to: str, body: str) -> SendResult:
     return SendResult(resp.is_success, "fast2sms", resp.text[:200])
 
 
+# --- WhatsApp (Cloud API) ---
+async def send_whatsapp(to: str, body: str) -> SendResult:
+    if settings.whatsapp_provider == "cloud" and settings.whatsapp_token:
+        return await _whatsapp_cloud(to, body)
+    logger.info("[WHATSAPP→%s] %s", to, body)
+    return SendResult(True, "console")
+
+
+async def _whatsapp_cloud(to: str, body: str) -> SendResult:
+    """Send a free-form text via the WhatsApp Cloud API (only valid inside the
+    24h customer-service window; outside it a pre-approved template is required)."""
+    url = f"https://graph.facebook.com/v21.0/{settings.whatsapp_phone_number_id}/messages"
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            url,
+            headers={"Authorization": f"Bearer {settings.whatsapp_token}"},
+            json={"messaging_product": "whatsapp", "to": to, "type": "text",
+                  "text": {"body": body}},
+        )
+    return SendResult(resp.is_success, "whatsapp", resp.text[:200])
+
+
 async def send(channel: str, *, to: str, subject: str, body: str) -> SendResult:
     if channel == "sms":
         return await send_sms(to, body)
+    if channel == "whatsapp":
+        return await send_whatsapp(to, body)
     return await send_email(to, subject or "A message from your travel agency", body)

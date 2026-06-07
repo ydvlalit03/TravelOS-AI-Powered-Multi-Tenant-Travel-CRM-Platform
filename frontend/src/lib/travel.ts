@@ -39,7 +39,7 @@ export interface TripDetail extends Trip {
 export interface Creative {
   id: string;
   trip_id: string | null;
-  kind: "poster" | "caption" | "brochure";
+  kind: "poster" | "caption" | "brochure" | "reel";
   status: string;
   url: string | null;
   text_content: string | null;

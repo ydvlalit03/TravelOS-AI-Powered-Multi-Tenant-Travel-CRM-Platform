@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     msg91_api_key: str = ""
     fast2sms_api_key: str = ""
 
+    # --- WhatsApp Cloud API (Phase 4) ---
+    whatsapp_provider: Literal["console", "cloud"] = "console"
+    whatsapp_phone_number_id: str = ""
+    whatsapp_token: str = ""
+    whatsapp_verify_token: str = "travelos-wa-verify"
+
     # --- CRM / followups ---
     followup_delay_minutes: int = 1440  # gap between sequence steps (default 1 day)
     followup_max_steps: int = 2  # reminders after the first touch
