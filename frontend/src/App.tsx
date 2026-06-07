@@ -5,7 +5,11 @@ import { Landing } from "@/pages/Landing";
 import { Signup } from "@/pages/Signup";
 import { Login } from "@/pages/Login";
 import { Onboarding } from "@/pages/Onboarding";
-import { Dashboard } from "@/pages/Dashboard";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Overview } from "@/pages/dashboard/Overview";
+import { Trips } from "@/pages/dashboard/Trips";
+import { TripDetail } from "@/pages/dashboard/TripDetail";
+import { Approvals } from "@/pages/dashboard/Approvals";
 import type { ReactNode } from "react";
 
 function Loader() {
@@ -25,9 +29,12 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 export default function App() {
   const location = useLocation();
+  // Keep the dashboard shell mounted across its sub-routes (the Outlet animates
+  // those); only animate top-level page swaps.
+  const key = location.pathname.startsWith("/app") ? "/app" : location.pathname;
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location} key={key}>
         <Route path="/" element={<Landing />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
@@ -43,10 +50,15 @@ export default function App() {
           path="/app"
           element={
             <RequireAuth>
-              <Dashboard />
+              <DashboardLayout />
             </RequireAuth>
           }
-        />
+        >
+          <Route index element={<Overview />} />
+          <Route path="trips" element={<Trips />} />
+          <Route path="trips/:id" element={<TripDetail />} />
+          <Route path="approvals" element={<Approvals />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>

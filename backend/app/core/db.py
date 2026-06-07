@@ -12,6 +12,7 @@ This also makes ``SET LOCAL`` of the tenant GUC scoped to the request.
 """
 import os
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from uuid import UUID
 
 from sqlalchemy import text
@@ -40,14 +41,19 @@ async_session_factory = async_sessionmaker(
 )
 
 
-async def set_tenant(session: AsyncSession, tenant_id: UUID | str) -> None:
-    """Bind the current request's transaction to a tenant for RLS.
+async def set_tenant(
+    session: AsyncSession, tenant_id: UUID | str, *, local: bool = True
+) -> None:
+    """Bind the session to a tenant for RLS.
 
-    Uses a transaction-local GUC so it never leaks across pooled connections.
+    local=True (default) scopes the GUC to the current transaction — right for a
+    one-transaction request. local=False sets it at connection level so it
+    survives the multiple await points of a streaming response; callers using
+    that must reset it (see ``tenant_session``).
     """
     await session.execute(
-        text("SELECT set_config('app.current_tenant', :tid, true)"),
-        {"tid": str(tenant_id)},
+        text("SELECT set_config('app.current_tenant', :tid, :local)"),
+        {"tid": str(tenant_id), "local": local},
     )
 
 
@@ -55,4 +61,18 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency: one transaction per request."""
     async with async_session_factory() as session:
         async with session.begin():
+            yield session
+
+
+@asynccontextmanager
+async def tenant_session(tenant_id: UUID | str) -> AsyncGenerator[AsyncSession, None]:
+    """A fresh tenant-bound session+transaction.
+
+    Used by streaming (SSE) endpoints: their response body runs after the
+    request's own transaction has closed, so writes need their own transaction
+    with the RLS tenant GUC set here.
+    """
+    async with async_session_factory() as session:
+        async with session.begin():
+            await set_tenant(session, tenant_id)
             yield session

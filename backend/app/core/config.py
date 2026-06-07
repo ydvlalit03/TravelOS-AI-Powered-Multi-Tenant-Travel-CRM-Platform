@@ -35,8 +35,10 @@ class Settings(BaseSettings):
     gemini_image_model: str = "gemini-2.5-flash-image"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
-    llm_text_provider: Literal["gemini", "groq"] = "gemini"
-    llm_image_provider: Literal["gemini", "pollinations"] = "pollinations"
+    llm_text_provider: Literal["gemini", "groq", "mock"] = "gemini"
+    # Default to keyless mock posters; set to "gemini" (needs GEMINI_API_KEY) for
+    # real images. Pollinations' free tier now often returns 402.
+    llm_image_provider: Literal["gemini", "pollinations", "mock"] = "mock"
 
     # --- Email / SMS (Phase 2) ---
     email_provider: Literal["console", "resend", "brevo"] = "console"

@@ -1,8 +1,11 @@
 """TravelOS FastAPI application entrypoint."""
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import api_router
 from app.core.config import settings
@@ -30,6 +33,11 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+
+# Serve generated creatives (posters, brochures) in dev. S3+CDN in Phase 5.
+_storage_dir = Path("/app/storage")
+_storage_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/storage", StaticFiles(directory=str(_storage_dir)), name="storage")
 
 
 @app.get("/health", tags=["meta"])
