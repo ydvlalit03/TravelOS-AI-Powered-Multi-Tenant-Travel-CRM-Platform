@@ -11,9 +11,11 @@ from app.core.db import get_db
 from app.models.approval import Approval
 from app.models.creative import CreativeAsset
 from app.models.lead import Message
+from app.models.sourcing import Deal
 from app.models.tenant import Tenant, User
 from app.models.trip import Trip
 from app.modules.crm import service as crm_service
+from app.modules.sourcing import service as sourcing_service
 from app.schemas.trip import ApprovalDecision, ApprovalOut
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
@@ -62,5 +64,12 @@ async def decide_approval(
             await crm_service.send_drafted_message(db, tenant, message)
         elif message is not None:
             message.status = "failed"  # rejected draft
+    elif approval.entity_type == "deal":
+        deal = await db.get(Deal, approval.entity_id)
+        if deal is not None and payload.decision == "approved":
+            tenant = await db.get(Tenant, user.tenant_id)
+            await sourcing_service.send_deal_outreach(db, tenant, deal)
+        elif deal is not None:
+            deal.status = "declined"
 
     return approval

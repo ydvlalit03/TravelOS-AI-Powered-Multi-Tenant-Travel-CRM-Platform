@@ -15,8 +15,10 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.db import async_session_factory, tenant_session
 from app.models.lead import Lead, ScheduledFollowup
+from app.models.publishing import ScheduledPost
 from app.models.tenant import Tenant
 from app.modules.crm.service import run_due_followup
+from app.modules.publishing.service import publish_post
 
 logger = logging.getLogger("travelos.scheduler")
 _scheduler: AsyncIOScheduler | None = None
@@ -54,6 +56,34 @@ async def process_due_followups() -> int:
     return processed
 
 
+async def process_due_posts() -> int:
+    """Publish scheduled posts whose time has come (scheduled_posts is RLS, so
+    iterate tenants and bind each before querying)."""
+    now = datetime.now(timezone.utc)
+    async with async_session_factory() as scan:
+        tenant_ids = [t for (t,) in (await scan.execute(select(Tenant.id))).all()]
+
+    published = 0
+    for tenant_id in tenant_ids:
+        try:
+            async with tenant_session(tenant_id) as s:
+                due = (await s.execute(
+                    select(ScheduledPost).where(
+                        ScheduledPost.status == "scheduled",
+                        ScheduledPost.scheduled_at.isnot(None),
+                        ScheduledPost.scheduled_at <= now,
+                    ).limit(50)
+                )).scalars().all()
+                for post in due:
+                    await publish_post(s, post)
+                    published += 1
+        except Exception:
+            logger.exception("Failed publishing for tenant %s", tenant_id)
+    if published:
+        logger.info("Published %d scheduled post(s)", published)
+    return published
+
+
 def start_scheduler() -> None:
     global _scheduler
     if _scheduler is not None:
@@ -64,6 +94,14 @@ def start_scheduler() -> None:
         "interval",
         seconds=settings.scheduler_interval_seconds,
         id="process_due_followups",
+        max_instances=1,
+        coalesce=True,
+    )
+    _scheduler.add_job(
+        process_due_posts,
+        "interval",
+        seconds=settings.scheduler_interval_seconds,
+        id="process_due_posts",
         max_instances=1,
         coalesce=True,
     )

@@ -10,6 +10,8 @@ import { Overview } from "@/pages/dashboard/Overview";
 import { Trips } from "@/pages/dashboard/Trips";
 import { TripDetail } from "@/pages/dashboard/TripDetail";
 import { Leads } from "@/pages/dashboard/Leads";
+import { Sourcing } from "@/pages/dashboard/Sourcing";
+import { Publishing } from "@/pages/dashboard/Publishing";
 import { Approvals } from "@/pages/dashboard/Approvals";
 import type { ReactNode } from "react";
 
@@ -59,6 +61,8 @@ export default function App() {
           <Route path="trips" element={<Trips />} />
           <Route path="trips/:id" element={<TripDetail />} />
           <Route path="leads" element={<Leads />} />
+          <Route path="sourcing" element={<Sourcing />} />
+          <Route path="publishing" element={<Publishing />} />
           <Route path="approvals" element={<Approvals />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Check, X, CheckCircle2, Map, Sparkles, Mail } from "lucide-react";
+import { Check, X, CheckCircle2, Map, Sparkles, Mail, Hotel } from "lucide-react";
 import { decideApproval, listApprovals, type Approval } from "@/lib/travel";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
@@ -51,6 +51,8 @@ export function Approvals() {
                     <Map className="h-5 w-5 text-[var(--color-ocean-600)]" />
                   ) : a.kind === "message" ? (
                     <Mail className="h-5 w-5 text-[var(--color-teal-400)]" />
+                  ) : a.kind === "sourcing" ? (
+                    <Hotel className="h-5 w-5 text-[var(--color-ocean-500)]" />
                   ) : (
                     <Sparkles className="h-5 w-5 text-[var(--color-sunset-500)]" />
                   )}

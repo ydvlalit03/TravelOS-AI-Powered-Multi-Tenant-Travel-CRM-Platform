@@ -10,6 +10,8 @@ from app.models.lead import (
     MessageTemplate,
     ScheduledFollowup,
 )
+from app.models.publishing import ScheduledPost, SocialAccount
+from app.models.sourcing import Deal, Vendor
 from app.models.tenant import Tenant, User, UserRole
 from app.models.trip import ItineraryDay, Trip, TripCosting
 
@@ -29,4 +31,8 @@ __all__ = [
     "Message",
     "MessageTemplate",
     "ScheduledFollowup",
+    "Vendor",
+    "Deal",
+    "SocialAccount",
+    "ScheduledPost",
 ]

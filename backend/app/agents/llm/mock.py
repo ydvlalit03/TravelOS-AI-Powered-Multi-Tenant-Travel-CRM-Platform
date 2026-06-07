@@ -136,6 +136,27 @@ def build_mock_classification(params: dict[str, Any]) -> dict[str, Any]:
     return {"intent": intent, "suggestion": suggestion}
 
 
+def build_mock_outreach(params: dict[str, Any]) -> dict[str, Any]:
+    vendor = params.get("vendor_name") or "team"
+    vtype = params.get("vendor_type", "hotel")
+    destination = params.get("destination", "the destination")
+    trip = params.get("trip_title") or f"{destination} trip"
+    days = params.get("days", "")
+    agency = params.get("agency", "our travel agency")
+    pax = params.get("audience") or "a group"
+    need = "rooms" if vtype == "hotel" else "vehicles/transfers"
+    subject = f"Partnership enquiry — {trip}"
+    body = (
+        f"Hi {vendor},\n\n"
+        f"This is {agency}. We're organising '{trip}' ({days} days in {destination}) "
+        f"for {pax} and would love to work with you for {need}.\n\n"
+        "Could you share your best group rates, availability, and any package deals? "
+        "We run trips here regularly and are looking for a reliable long-term partner.\n\n"
+        "Looking forward to your quote.\n\nWarm regards"
+    )
+    return {"subject": subject, "body": body}
+
+
 def _has_task(messages: list[BaseMessage], task: str) -> bool:
     for msg in messages:
         text = msg.content if isinstance(msg.content, str) else str(msg.content)
@@ -163,6 +184,8 @@ class MockChatModel(BaseChatModel):
             return json.dumps(build_mock_first_touch(params), ensure_ascii=False)
         if _has_task(messages, "classify"):
             return json.dumps(build_mock_classification(params), ensure_ascii=False)
+        if _has_task(messages, "outreach"):
+            return json.dumps(build_mock_outreach(params), ensure_ascii=False)
         return json.dumps(build_mock_itinerary(params), ensure_ascii=False)
 
     def _generate(
