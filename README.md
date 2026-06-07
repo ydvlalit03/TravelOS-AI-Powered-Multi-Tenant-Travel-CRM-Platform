@@ -14,6 +14,10 @@ Instagram publishing, and a full lead CRM — run by AI agents, **approved by a 
 
 <sub>⚡ Live demo runs on a free-tier box and may be parked after the showcase window.</sub>
 
+<br/><br/>
+
+<img src="docs/screenshots/01-landing.png" alt="TravelOS landing" width="90%"/>
+
 </div>
 
 ---
@@ -43,6 +47,21 @@ where AI agents do the grunt work and the human just **reviews and approves**.
 | 📊 | **Analytics** | Live funnel, conversion %, source mix | Watch it grow |
 
 Every draft lands in a single **Approval Center** — the human-in-the-loop heartbeat of the system.
+
+---
+
+## 📸 A look inside
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/03-trip.png" alt="Trip builder + Creative Studio"/><br/><sub><b>Trip Builder + Creative Studio</b> — AI itinerary, costing, poster, caption, brochure & reel</sub></td>
+    <td width="50%"><img src="docs/screenshots/04-leads.png" alt="Leads Kanban"/><br/><sub><b>Leads CRM</b> — 7-stage Kanban, source-tagged (Meta / web / WhatsApp / manual)</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/05-analytics.png" alt="Analytics"/><br/><sub><b>Analytics</b> — lead funnel, conversion %, source breakdown</sub></td>
+    <td width="50%"><img src="docs/screenshots/02-overview.png" alt="Dashboard overview"/><br/><sub><b>Dashboard</b> — your whole agency at a glance, approvals front and center</sub></td>
+  </tr>
+</table>
 
 ---
 
