@@ -26,6 +26,9 @@ class Tenant(Base, UUIDPrimaryKey, TimestampMixin):
     slug: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
     # Light onboarding state so the UI can resume where the user left off.
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    # When true, the followup agent sends first-touch/sequence messages
+    # automatically; otherwise they wait in the Approval Center (HITL).
+    auto_followup: Mapped[bool] = mapped_column(Boolean, default=False)
 
     users: Mapped[list["User"]] = relationship(
         back_populates="tenant", cascade="all, delete-orphan"

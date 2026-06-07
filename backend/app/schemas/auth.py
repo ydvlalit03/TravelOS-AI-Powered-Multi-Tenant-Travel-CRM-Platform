@@ -48,6 +48,7 @@ class TenantOut(BaseModel):
     name: str
     slug: str
     onboarding_completed: bool
+    auto_followup: bool = False
     created_at: datetime
 
 

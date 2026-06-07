@@ -9,6 +9,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Overview } from "@/pages/dashboard/Overview";
 import { Trips } from "@/pages/dashboard/Trips";
 import { TripDetail } from "@/pages/dashboard/TripDetail";
+import { Leads } from "@/pages/dashboard/Leads";
 import { Approvals } from "@/pages/dashboard/Approvals";
 import type { ReactNode } from "react";
 
@@ -57,6 +58,7 @@ export default function App() {
           <Route index element={<Overview />} />
           <Route path="trips" element={<Trips />} />
           <Route path="trips/:id" element={<TripDetail />} />
+          <Route path="leads" element={<Leads />} />
           <Route path="approvals" element={<Approvals />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
